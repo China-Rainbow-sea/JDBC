@@ -1,9 +1,13 @@
 import org.junit.Test;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.ResourceBundle;
 /*
 1. JDBC 是什么 ?
 java DataBase Connectivity(java语言连接数据库)
@@ -127,6 +131,163 @@ public class TestJdbc {
 
     }
 
+
+
+    //@ 方式三:利用反射加载类
+    /*
+    反射获取 Driver 实现对象,使用反射加载 Driver 类,动态加载,更加灵活,减少依赖性
+     */
+    @Test
+    public void ConnectionTest3() throws IllegalAccessException, InstantiationException, ClassNotFoundException, SQLException {
+        // 1. 注册驱动,说明你需要连接的是什么品牌的数据库
+        Class<?> aClass = Class.forName("com.mysql.jdbc.Driver");
+        // interface java.sal.Driver              泛型,强制转化为 interface 多态,接口引用实现类
+        java.sql.Driver driver = (java.sql.Driver)aClass.newInstance(); // 将该类的中的对象赋值给Driver类型
+
+        // 2. 连接数据库(注册驱动的数据库)
+        String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8"; // 数据库在网络上的地址
+        // ?useUnicode=true&characterEncoding=utf8 设置一下其中的字符编码集防止报 255编码无法识别的错误
+        // url 统一资源定位符, jdbc:mysql 协议, localhost(域名) ip地址,3306 mysql 默认端口号,test具体实例的数据库名
+
+        Properties info = new Properties(); // 将用户名和密码封装到该对象中,让其自动获取
+        info.setProperty("user","root"); // user 用户名该变量名是规定好了的,不可修改
+        info.setProperty("password","MySQL123"); // password 密码该变量名是规定好了的,不可修改
+
+        Connection connection = driver.connect(url,info);  // 通过driver.connect 尝试连接数据库中,尝试可能失败,异常处理
+        System.out.println("方式三:"+connection);
+        // 方式三:com.mysql.jdbc.JDBC4Connection@68f7aae2
+
+
+        // 3.创建操作数据库的对象
+        // 4. 通过创建的对象执行SQL 语句
+        // 5. 如果第四步执行的是 select j
+        // 6. 关闭资源,一般放在finally 中一定会被执行(无论是否出现异常)
+
+    }
+
+
+
+    //方式四: 通过反射加载类,和 使用DriverManager 代替Diver 进行统一管理数据库(注册驱动,连接数据库)
+    @Test
+    public void ConnectionTest4() throws ClassNotFoundException, IllegalAccessException, InstantiationException, SQLException {
+
+        // 1. 注册驱动(说明你要连接的是哪个品牌的数据库),通过反射加载类,后强制转化赋值给 interface java.sql.Driver 接口实现多态,
+        Class<?> aClass = Class.forName("com.mysql.jdbc.Driver");
+        java.sql.Driver driver = (java.sql.Driver)aClass.newInstance(); // 接口引用实现类,动态绑定
+        DriverManager.registerDriver(driver); // 通过 DriverManager.registerDriver(Driver driver) 注册驱动
+                                              // 参数是 interface 接口sql.Driver 多态,接口不能new 所以我们调用其实现 package
+                                              // com.mysql.jdbc.Driver 实现类.
+
+        // 2. 连接(注册驱动)的数据库
+        String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8"; // 数据库在网络上的地址
+        // url 统一资源定位符,规定好的变量名,不可修改,jdbc:mysql 协议, localhost(域名)ip地址,test 具体实例的数据库名
+        // ?useUnicode=true&characterEncoding=utf8 设置其字符编码集,防止报 255 无法识别字符集编码的错误
+
+        String user = "root"; // 用户名, user 变量名是规定好的,不要修改
+        String password ="MySQL123";
+
+        Connection connection = DriverManager.getConnection(url,user,password); // 通过DriverManager.getConnection获取连接
+        System.out.println("方式四:"+connection); // 打印连接的数据库的地址
+        // 方式四:com.mysql.jdbc.JDBC4Connection@4f47d241
+
+        // 3. 获取操作数据库的对象
+        // 4. 通过对象执行 SQL语句(DML,DQL)
+        // 5.如果第四步是 select 查询结果集,处理结果集
+        // 6.关闭资源,从小到大,一般放在 finally 中,一定会被执行无论(是否发生异常)
+
+
+
+    }
+
+
+
+    // 方式五: 通过反射机制,加载类Driver 中的静态代码块中的,DriverManager.registerDriver(new Driver())注册驱动
+    @Test
+    public void ConnectionTest5() throws ClassNotFoundException, SQLException {
+        // 1. 反射加载类,执行 com.mysql.jdbc.Driver package包下的注册驱动的静态代码块
+        Class.forName("com.mysql.jdbc.Driver");  // 反射加载 com.mysql.jdbc.Driver 的类
+
+        String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8";
+        // url 统一资源定位符包括(http协议,(域名)ip地址,端口号,资源路径)
+        // jdbc:mysql 协议,localhost(域名)ip地址,3306 mysql默认端口号,test 实际具体的数据库名,
+        // ?useUnicode=true&characterEncoding=utf8 设置字符编码集,防止 255的错误
+        // 2. 连接(注册的驱动)的数据库
+        Connection connection = DriverManager.getConnection(url, "root", "MySQL123");
+        System.out.println("方式五:"+connection); // 打印连接的数据库的地址
+        // 方式五:com.mysql.jdbc.JDBC4Connection@68f7aae2
+
+        //3. 获取操作数据库的对象
+        //4. 通过对象执行 SQL语句
+        //5. 如果第四步是select 查询结果集,处理结果集
+        //6. 关闭资源,从小到大,一般放在finally 中一定会被执行的(无论是否异常)
+
+    }
+
+
+    // 方式六: 将配置信息写入到.properties 文件中去, 这样使连接数据库更加灵活,比如:端口,数据库,用户名,密码都写入到文件中
+    /*
+    好处:
+    实现了数据与代码的分离,实现了解耦
+    如果需要修改配置文件信息,可以避免程序重新打包
+     */
+    @Test
+    public void ConnectionTest6() throws ClassNotFoundException, SQLException {
+        // 使用资源绑定器,绑定属性的配置文件.properties 这个配置文件
+        ResourceBundle bundle = ResourceBundle.getBundle("jdbc");
+        String driver = bundle.getString("driverClass");  // Driver 类
+        String url = bundle.getString("url");  // url  统一资源定位符
+        String user = bundle.getString("user");   // 用户名
+        String password = bundle.getString("password"); // 密码
+
+        // 1. 注册驱动(说明你要调用的是什么品牌的数据库),这里使用反射加载类,调用com.mysql.jdbc.Driver 的类下的静态代码块,
+        // 加载注册驱动
+        Class.forName(driver);
+
+        // 2. 连接(注册的驱动)上的数据库
+        // Connection interface 接口 多态,接口引用实现类
+        Connection connection = DriverManager.getConnection(url,user,password);
+        System.out.println("方式六:"+connection); // 打印其连接上的数据库的地址
+        // 方式六:com.mysql.jdbc.JDBC4Connection@4f47d241
+
+        // 3. 获取操作数据库的对象
+        // 4. 通过对象执行 SQL(DML,DQL) 语句
+        // 5. 如果第4步,是select查询结果集,那就需要处理结果集
+        // 6. 关闭资源,从小到大,一般放在 finally 中,一定会执行(无论是否异常)
+
+    }
+
+
+    // 方式六的:另外一种调用读取配置文件
+    @Test
+    public void ConnectionTest7() throws IOException, ClassNotFoundException, SQLException {
+
+        // 通过 Properties 对象获取配置文件中的信息
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("src\\jdbc.properties"));
+
+        String driver = properties.getProperty("driverClass"); // Driver 实现类com.mysql.jdbc.Driver package
+        String url = properties.getProperty("url");  // url 统一资源定位符
+        String user = properties.getProperty("user");  // 用户名
+        String password = properties.getProperty("password");  // 密码
+
+        // 1. 注册驱动,通过反射加载类 Driver,执行该类中的 DriverManager.registerDriver(new Driver()) 注册驱动
+        Class.forName(driver);  //  该反射不需要接受返回值,因为我不想用它加载动作,而是让其自动执行其中的静态代码块
+
+        // 2. 连接(注册驱动)上的数据库
+        // Connection 是 interface 接口 ，接口引用实现类,动态绑定
+        Connection connection =  DriverManager.getConnection(url,user,password);
+        System.out.println("方式六的另一种方式:"+connection); // 打印连接数据库中的地址
+        // 方式六的另一种方式:com.mysql.jdbc.JDBC4Connection@68f7aae2
+
+        // 3. 获取操作数据库的对象
+        // 4. 通过对象执行SQL语句中的DML,DQL 语句
+        // 5. 如果第4步中执行了,select 查询结果集的，处理结果集
+        // 6. 关闭资源,从小到大,一般放在 finally 中一定会被执行(无论是否异常);
+
+
+
+    }
+
 }
 
 
@@ -134,7 +295,7 @@ public class TestJdbc {
 
 /*
 
- Driver 接口的实现类 包位置是 package com.mysql.jdbc;
+ Driver 接口的实类 包位置是 package com.mysql.jdbc;
 public class Driver extends NonRegisteringDriver implements java.sql.Driver {
 
 	static {
@@ -206,4 +367,11 @@ public static Connection getConnection(String url,
 public static Connection getConnection(String url)
                                 throws SQLException
    尝试建立与给定数据库URL的连接。 DriverManager尝试从一组已注册的JDBC驱动程序中选择适当的驱动程序。
+ */
+
+
+/*
+
+public void load(Reader reader)
+          throws IOException以简单的线性格式从输入字符流读取属性列表（关键字和元素对）。
  */
