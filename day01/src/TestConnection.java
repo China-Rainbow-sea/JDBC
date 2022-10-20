@@ -129,6 +129,7 @@ public class TestConnection {
         // 静态代码块中的参数 Driver()是接口,接口不可以 new 多态,接口引用实现类
         // url 统一资源定位符
         String url = "jdbc:mysql://localhost:3306/dbtest7?useUnicode=true&characterEncoding=utf8"; // 数据库在网络上的地址
+        //
         String user = "root";  // 用户名
         String password = "MySQL123";  // 密码
 
