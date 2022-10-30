@@ -3,6 +3,7 @@ package day03;
 public class User {
     private String user;
     private String password;
+    private int balance;
 
     public User(){  // 空的构造器
 
@@ -30,11 +31,20 @@ public class User {
         this.password = password;
     }
 
+    public int getBalance() {
+        return balance;
+    }
+
+    public void setBalance(int balance) {
+        this.balance = balance;
+    }
+
     @Override
     public String toString() {
         return "User{" +
                 "user='" + user + '\'' +
                 ", password='" + password + '\'' +
+                ", balance=" + balance +
                 '}';
     }
 }

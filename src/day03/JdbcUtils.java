@@ -90,6 +90,35 @@ public class JdbcUtils {
     }
 
 
+    public static void closeResource(Connection connection,Statement statement,ResultSet resultSet){
+        if( resultSet != null){   // != null 只有当使用/连接上了该资源,才需要关闭,没有连接/使用的话,是不需要关闭的
+            try{
+                resultSet.close();  // 同时防止null引用,报错
+            } catch(SQLException e){
+                e.printStackTrace();
+            }
+
+        }
+
+
+        if(statement != null){
+            try{
+                statement.close();
+            }catch(SQLException e){
+                e.printStackTrace();
+            }
+        }
+
+
+        if( connection != null){
+            try{
+                connection.close();
+            } catch(SQLException e){
+                e.printStackTrace();
+            }
+        }
+
+    }
 
 }
 
