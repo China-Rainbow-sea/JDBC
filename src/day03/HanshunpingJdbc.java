@@ -6,7 +6,18 @@ import java.sql.*;
  * 使用PreparedStatement 完成 insert delete update select
  */
 public class HanshunpingJdbc {
-    public static void main(String[] args) {
+    public static void main(String[] args){
+        HanshunpingJdbc hanshunpingJdbc = new HanshunpingJdbc(); // 实例化对象,静态方法调用非静态方法
+        hanshunpingJdbc.testDMl();
+    }
+
+
+
+    /**
+     * insert delete update 的测试
+     * @param args
+     */
+    public static void main1(String[] args) {
         HanshunpingJdbc hanshunpingJdbc = new HanshunpingJdbc(); // 实例化对象,静态方法调用非静态方法
       /*
         // insert 插入数据
@@ -107,6 +118,50 @@ public class HanshunpingJdbc {
                 throw new RuntimeException(e); // 将编译异常转为运行异常处理
             }
         }
+    }
+
+
+    public void testDMl() {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;  // 扩大作用域,用于关闭资源
+
+        try {
+            // 1. 注册驱动, 2.连接数据库
+            connection = registration();
+
+            // 3. 获取操作数据库对象
+            String sql = "select `name`, password from users where name = ?"; // 占位符不要加'单引号'不然就变成字符串了,失效了
+            preparedStatement = connection.prepareStatement(sql); // 只是预编译sql语句,并不会执行sql
+
+            // 4. 执行sql语句
+            // 4.1 填充占位符,(占位符起始下标是 1, 基本所有的jdbc的下标都是从 1 开始的)
+            preparedStatement.setString(1,"Tom");
+            resultSet = preparedStatement.executeQuery();  // 执行sql语句,注意是无参数方法,因为上面已经预编译过了
+
+            // 5. 处理select 查询显示的结果集
+            while(resultSet.next()) { // next:表示指向的当前行的指针,并判断当前行(记录)是否有数据:有true,没有false,每次调用都会向下移动(指向下一行(记录))
+                // 处理一行(记录)的所有列
+                String name = resultSet.getString("name"); // 根据select查询显示的结果集的(列号(从下标 1 开始)/显示的列名(字段名 包括别名)获取对应的数据
+                String password = resultSet.getString("password");  // getString表示:无论你从数据库中读取到的是什么类型的数据都转化为String的形式赋值,
+                // 同理还有getInt,getDouble
+                System.out.println(name+"->"+password);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // 6. 关闭资源
+            if( resultSet != null){
+                try{
+                    resultSet.close();
+                } catch(SQLException e){
+                    throw new RuntimeException(e); // 将编译异常转化为运行异常抛出;
+                }
+            }
+            close(connection,preparedStatement);
+        }
+
+
     }
 
 }
