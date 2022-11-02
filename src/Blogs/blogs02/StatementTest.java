@@ -4,7 +4,87 @@ import java.sql.*;
 import java.util.Scanner;
 
 public class StatementTest {
+    /**
+     * 对 usre_table 数据表中的balance 进行一个 desc降序,asc 升序
+     * @param args
+     */
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("请输入desc/asc, desc表示降序,asc表示升序: ");
+        String keywords = scanner.next();
+
+
+        // jdbc 代码
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            // 1. 注册驱动
+            Class.forName("com.mysql.jdbc.Driver"); // 通过反射加载类,执行com.mysql.jdbc.Driver类的静态代码(注册驱动)
+            // Driver默认是java.sql的接口,com.mysql.jdbc.Driver包下的Driver类
+
+            // 2. 连接驱动的数据库
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbtest6?useUnicode=true" +
+                    "&characterEncoding=utf8","root","MySQL123");
+
+            // 3. 获取操作数据库的对象
+            statement = connection.createStatement();
+
+            // 4. 执行sql语句的select查询语句,注意与名称与sql关键字冲突的使用`着重号区分`
+            String sql = "select `user`,password,balance from user_table order by balance "+keywords;
+            // 在mysql中sql语句的结尾需要加;分号，但是在java当中的sql语句是不要加;(分号)的,不然报错
+            resultSet = statement.executeQuery(sql); // 执行sql语句
+
+            // 5. 处理当前select查询到的结果集
+            while(resultSet.next()) {
+                String user = resultSet.getString(1);
+                String password = resultSet.getString(2);
+                int balance = resultSet.getInt(3);
+
+                System.out.println(balance+":"+user+":"+password);
+            }
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // 6. 关闭/释放资源,从小到大
+
+            if(resultSet != null) { // !=null的表示连接/使用了资源需要关闭/释放资源,=null表示没有连接/使用资源不用关闭
+                try {  // 防止 null引用
+                    resultSet.close();  // 关闭资源
+                } catch(SQLException e){
+                    e.printStackTrace();
+                }
+            }
+
+            if( statement != null) {
+                try {
+                    statement.close(); // 关闭/释放资源
+                } catch(SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if(connection != null) {
+                try {
+                    connection.close(); // 关闭/释放资源
+                } catch(SQLException e) {
+                    throw new RuntimeException(e); // 将编译异常转化为运行异常抛出
+                }
+            }
+        }
+
+
+    }
+
+    /**
+     * select 查询操作
+     * @param args
+     */
+    public static void main5(String[] args) {
         Scanner scanner = new Scanner(System.in);
         System.out.print("用户名user: ");
         String user = scanner.nextLine();   // next无法读取到空格,nextLine可以读取到空格
