@@ -1,6 +1,4 @@
 import com.mysql.jdbc.Driver;
-import org.junit.Test;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -8,7 +6,6 @@ import java.util.Properties;
 
 public class TestJdbc3 {
 
-    @Test
     /*
     Java程序连接Mysql数据库的方式一:创建Driver 类调用其中的对应的方法
      */                          // throws 异常处理
@@ -58,7 +55,6 @@ public class TestJdbc3 {
      * Java程序连接mysql数据库中的方式二
      * 通过反射加载 forName中的类掉应用曲中
      */
-    @Test
     public void testConnection2() throws ClassNotFoundException, IllegalAccessException, InstantiationException, SQLException {
         /*
         通过反射加载Driver类,动态加载,更加的灵活,减少依赖性
@@ -99,7 +95,6 @@ public class TestJdbc3 {
     /**
      * 方式三: 使用DriverManager 替代 Diver 进行统一的管理(注册驱动)
      */
-    @Test
     public void testConnection3() throws ClassNotFoundException, IllegalAccessException, InstantiationException, SQLException {
         //1. 通过反射加载对应的类Driver,获取 Driver 实现类的对象
         Class clazz = Class.forName("com.mysql.jdbc.Driver"); // 通过反射加载类,加载的类通过绝对路径引入
@@ -138,7 +133,6 @@ public class TestJdbc3 {
      * jar驱动包下META-INF\Servies\java.sql.Driver 文本中类的名称注册,但是不建议省略,建议写上,提高代码的可读性
      *
      */
-    @Test
     public void testConnection4() throws ClassNotFoundException {
         // 1. 提供三个连接数据库的基本信息,url,user,password
         String url = "jdbc:mysql://localhost:3306/test"; // url 数据库在网络中的地址
