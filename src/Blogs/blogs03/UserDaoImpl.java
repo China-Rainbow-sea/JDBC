@@ -19,7 +19,7 @@ public class UserDaoImpl extends BaseDAO implements UserDAO{
      */
     @Override
     public int insert(Connection connection, User user) {
-        String sql = "insert into user_table(user,password,balance) values(?,?,?)"; // 占位符不要加单引号不然就成字符串了
+        String sql = "insert into user_table(`user`,`password`,balance) values(?,?,?)"; // 占位符不要加单引号不然就成字符串了
         return super.update(connection,sql,user.getUser(),user.getPassword(),user.getBalance());
     }
 
@@ -45,8 +45,8 @@ public class UserDaoImpl extends BaseDAO implements UserDAO{
      */
     @Override
     public int update(Connection connection, User user) {
-        String sql = "update user_table set user = ? password = ? balance = ? where user = ?";
-        return super.update(connection,sql,user.getUser(),user.getPassword(),user.getPassword(),user.getUser());
+        String sql = "update user_table set user = ? ,password = ?, balance = ? where user = ?";
+        return super.update(connection,sql,user.getUser(),user.getPassword(),user.getBalance(),user.getUser());
     }
 
 
