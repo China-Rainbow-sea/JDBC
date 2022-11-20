@@ -41,6 +41,8 @@ import com.mchange.v2.c3p0.DataSources;
 
 import java.beans.PropertyVetoException;
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
@@ -53,7 +55,7 @@ import java.sql.SQLException;
 public class C3p0Test {
     // 1.加载指定的jdr包
     // 方式一:导入配置参数,创建c3p0数据库连接池
-    public static void main(String[] args) {
+    public static void main1(String[] args) {
         ComboPooledDataSource cpds = new ComboPooledDataSource();  // 创建有关c3p0的对象,并创建c3p0数据库连接池
         try {
             cpds.setDriverClass("com.mysql.cj.jdbc.Driver");   // 注册驱动
@@ -88,4 +90,118 @@ public class C3p0Test {
 
 
     // 方式二: 使用C3P0数据库连接池的配置文件方式，获取数据库的连接：推荐
+    // 在src目录下：创建xml配置文件,注意文件规定必须是名为: c3p0-config.xml 才可以
+    public static void main2(String[] args) {
+        Connection connection = null;
+        ComboPooledDataSource cpds = new ComboPooledDataSource("helloc3p0");  //根据自动获取helloc3p0中的 c3p0-config.xml 的
+        // 配置信息,创建c3p0数据库连接池
+
+
+        try {
+            connection = cpds.getConnection(); // 获取到c3p0数据库连接池中的其中的一个连接对象
+        } catch (SQLException e) {
+            throw new RuntimeException(e);   // 将编译异常转换为运行异常抛出
+        }
+
+        System.out.println(connection);   // 打印连接地址
+        System.out.println(connection.getClass());  // 打印显示对应的类中的包路径
+
+    }
+
+
+
+    // 测试传统连接数据库的方式
+    public static void main3(String[] args) {
+        Connection connection = null;
+
+        try {
+            // 注册驱动
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            // 获取驱动上的连接
+            connection = DriverManager.getConnection("jdbc:mysql:///test?rewriteBatchedStatements=true","root",
+                    "MySQL123");  // localhost:3306(本主机) 可以省略改写为jdbc:mysql///test,?rewriteBatchedStatements=true批量处理
+
+            System.out.println(connection);
+            System.out.println(connection.getClass());  // 打印所在类的包所在位置(路径)
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // 关闭连接
+            if(connection != null) {
+                try{
+                    connection.close();
+                } catch(SQLException e) {
+                    throw new RuntimeException(e);  // 将编译异常转换为运行时异常抛出
+                }
+            }
+        }
+
+    }
+
+
+    // 测试传统连接数据库 5000次所消耗的时间:
+    public static void main4(String[] args) {
+        Connection connection = null;
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            long start = System.currentTimeMillis();  // 连接之前的时间点:单位: 毫秒
+            for(int i = 0; i < 5000; i++) {
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/test?rewriteBatchedStatements=true",
+                    "root","MySQL123");
+            // 传统的连接数据库方式过多连接数据库报错: Data source rejected establishment of connection,  message from server: "Too many connections"
+                if(connection != null) { // 防止null引用
+                    try{
+                        connection.close();  // 关闭连接
+                    } catch(SQLException e) {
+                        throw new RuntimeException(e);  // 编译异常 ——> 运行异常抛出
+                    }
+                }
+            }
+            long end = System.currentTimeMillis();  // 5000次完成的时间点， 单位: 毫秒
+
+            System.out.println("传统的连接数据库5000次所消耗的时间: "+(end - start)); // 42826
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    // 测试使用c3p0连接数据库连接池5000/5W/50w/500wl连接所消耗的时间是多少
+    public static void main(String[] args) {
+        ComboPooledDataSource cpds = new ComboPooledDataSource("helloc3p0"); // 根据c3p0-config.xml配置信息创建c3p0数据库连接池
+
+        try {
+            long start = System.currentTimeMillis();  // 连接前的时间点：单位毫秒
+            for(int i = 0 ; i < 500000; i++) {
+                Connection connection = cpds.getConnection();  // 获取到c3p0数据库连接池中其中的一个连接对象
+                if(connection != null) {
+                    try {
+                        connection.close();  // 注意在c3p0数据库连接池中获取到的连接是 “归还连接,并不是jdbc.mysql中的关闭连接”;
+                                             // 虽然connection 对象一样,但是各自实现的方式不同.
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+            long end = System.currentTimeMillis();  // 5000 次连接结束的时间点: 单位毫秒
+
+            System.out.println("c3p0数据库连接池5000/5W/50w/500w次连接消耗的时间: " +(end - start));  // 没有归还连接消耗的时间:
+                                                                                        // 归还连接的消耗的时间: 643 毫秒
+             // 5000次: 639，5w次: 775,50w次: 2098
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 }
