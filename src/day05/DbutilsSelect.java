@@ -124,7 +124,7 @@ public class DbutilsSelect {
      * MapHandler: 是ResultSetHandler 接口的实现类，用于封装表中的 “一条” 记录，将字段及相应字段的值作为map中的key 和value值
      * @param args
      */
-    public static void main3(String[] args) {
+    public static void main(String[] args) {
         Connection connection = null;
         Properties properties = new Properties();  // 创建读取.properties配置文件的对象
 
@@ -253,7 +253,7 @@ public class DbutilsSelect {
      * ScalarHandler 特殊查询 max(),count()
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main6(String[] args) {
         Connection connection = null;
         Properties properties = new Properties();  // 获取到读取.properties后缀的配置文件的对象
 
