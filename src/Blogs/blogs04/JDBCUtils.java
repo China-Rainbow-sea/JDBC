@@ -1,5 +1,6 @@
 package Blogs.blogs04;
 
+import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.apache.commons.dbcp.BasicDataSourceFactory;
 
@@ -14,6 +15,37 @@ import java.util.Properties;
 public class JDBCUtils {
 
     private static DataSource dataSource = null;
+
+
+    static {
+        try {
+            // 读取配置文件的方式二:
+            FileInputStream io = new FileInputStream(new File("src/druid.properties"));
+
+            // 创建对象获取到读取的配置文件中的关键字/属性值
+            Properties properties = new Properties();
+            properties.load(io);
+
+            // 通过传入读取配置文件信息对象，创建 druid数据库连接池
+            dataSource = DruidDataSourceFactory.createDataSource(properties);
+        } catch (Exception e) {
+            throw new RuntimeException(e);  // 将编译异常转换为运行异常抛出
+        }
+    }
+
+    public static Connection getDruidConnection() {
+        try {
+            Connection connection = dataSource.getConnection();
+            return connection;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);  // 将编译异常转换为运行异常抛出
+        }
+    }
+
+
+
+
+
     static {
         try {
             // 读取配置文件中的信息,方式一:
