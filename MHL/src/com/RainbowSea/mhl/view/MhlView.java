@@ -364,6 +364,14 @@ public class MhlView {
             return ;
         }
 
+        // 判断该餐桌是否存在
+        Dining dining = diningService.getDiningById(diningId);
+        if(dining == null) {
+            System.out.println("【该餐桌不存在】");
+            return;
+        }
+
+
         // 判断餐桌的状态是否为 已经预定了，
         if(!diningService.getDiningByIdAndState(diningId)) {
             System.out.println("【该餐桌为：正在就餐中/还未预定，无法取消预定】");
